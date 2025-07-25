@@ -1,0 +1,35 @@
+# Agent Framework
+langchain
+langchain_community
+langchain_core
+langchain_tavily
+langchain_redis
+langchain_huggingface
+langchain_google_genai
+langchain_text_splitters
+langgraph
+langgraph_checkpoint
+langgraph_checkpoint_redis
+
+# Deep Learning
+torch
+sentence_transformers
+
+# Data processing
+unstructured
+
+# UI
+streamlit
+
+# Database
+redis
+pinecone
+
+# Data Structure
+pydantic
+ulid
+
+# Other
+tqdm
+wget
+hf_xet
