@@ -2,6 +2,17 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import asyncio
+
+def ensure_event_loop():
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+ensure_event_loop()
+
 from config import envConfig
 from huggingface_hub import login
 login(envConfig.HUGGINGFACE_TOKEN)
@@ -9,10 +20,11 @@ login(envConfig.HUGGINGFACE_TOKEN)
 import streamlit as st
 import ulid
 from langchain_core.runnables.config import RunnableConfig
-from events.components import st_document_receiving_area
 from events.chat import handle_bot_chat
 from agents.graph import build_graph
 from agents.states import RuntimeState
+from rag.chain import chain
+from llms.chat_models import main_chat_model
 
 
 def setup_page() -> None:
@@ -23,15 +35,8 @@ def setup_page() -> None:
         initial_sidebar_state="expanded",
     )
 
-    # Initialize session state variables
-    if "uploaded_files" not in st.session_state:
-        st.session_state.uploaded_files = []
-    if "urls" not in st.session_state:
-        st.session_state.urls = ""
-    if "title_dir_name" not in st.session_state:
-        st.session_state.title_dir_name = ""
     if "graph" not in st.session_state:
-        st.session_state.graph = build_graph()
+        st.session_state.graph = chain
     if "chat_config" not in st.session_state:
         st.session_state.chat_config = RunnableConfig(configurable={"thread_id": ulid.ULID(), "user_id": ulid.ULID()})
     if "chat_state" not in st.session_state:
@@ -40,15 +45,6 @@ def setup_page() -> None:
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-
-def setup_sidebar() -> None:
-    with st.sidebar:
-        #  Title and descriptionS
-        st.sidebar.title("Import Documents")
-
-        # Upload files or urls choice
-        st_document_receiving_area()     
-   
 
 def setup_chat_interface() -> None:
     st.chat_message("assistant").markdown(
@@ -72,10 +68,7 @@ def setup_chat_interface() -> None:
 def main():
     # Setup page
     setup_page()
-
-    # Setup sidebar
-    setup_sidebar()
-
+    
     # Setup chat interface
     setup_chat_interface()
 

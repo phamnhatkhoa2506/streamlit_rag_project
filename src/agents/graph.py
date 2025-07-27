@@ -36,3 +36,6 @@ def build_graph():
     graph = graph_builder.compile(checkpointer=redis_saver)
 
     return graph
+
+
+# graph = build_graph()

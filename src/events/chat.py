@@ -21,3 +21,12 @@ def handle_bot_chat(question: str) -> None:
         with st.chat_message(name="ai"):
             st.write(message)
         st.session_state.messages.append({"role": "ai", "content": message})
+
+
+def handle_bot_chat(question: str) -> None:
+    with st.spinner(): 
+        answer =  st.session_state.graph.invoke(question)
+
+        with st.chat_message(name="ai"):
+            st.write(answer)
+        st.session_state.messages.append({"role": "ai", "content": answer})

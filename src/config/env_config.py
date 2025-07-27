@@ -7,6 +7,7 @@ class EnvConfig(BaseSettings):
     TAVILY_API_KEY: str | None = None
     PINECONE_API_KEY: str | None = None
     HUGGINGFACE_TOKEN: str | None = None
+    COHERE_API_KEY: str | None = None
 
     REDIS_URL: str | None = None
     REDIS_HOST: str | None = None

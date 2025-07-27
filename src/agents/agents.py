@@ -1,9 +1,11 @@
 from langchain_core.messages import SystemMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.redis import RedisSaver
-from utils.redis_connection import redis_client
+
 from agents.tools import tools
 from llms.chat_models import main_chat_model
+from rag.chain import chain
+from utils.redis_connection import redis_client
 
 
 redis_saver = RedisSaver(redis_client=redis_client)

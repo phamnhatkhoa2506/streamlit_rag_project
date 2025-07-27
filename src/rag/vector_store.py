@@ -9,11 +9,13 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain.storage import InMemoryByteStore
 from langchain_core.stores import InMemoryStore
-from langchain_community.document_compressors.rankllm_rerank import RankLLMRerank
 from langchain_chroma import Chroma
 from langchain_pinecone import PineconeVectorStore
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_cohere import CohereRerank
 from pinecone import ServerlessSpec
+
+from config import envConfig
 
 
 class VectorStore:
@@ -36,7 +38,7 @@ class VectorStore:
         self.documents = documents
 
         # Embedding model
-        self.embedding_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        self.embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
         # Indices for documents
         self.ids = [str(uuid4()) for _ in range(len(documents))]
@@ -48,9 +50,6 @@ class VectorStore:
                 ids=self.ids,
                 collection_name=name,
                 embedding=self.embedding_model,
-                collection_metadata={
-                    key: value for key, value in kwargs.items()
-                },
                 persist_directory=f"./chroma_db/{name}"
             )
         elif storedb == 'faiss':
@@ -118,7 +117,6 @@ class VectorStore:
         search_type: Literal['similarity', 'similarity_score_threshold', 'mmr'] = 'similarity',
         search_kwargs: dict = {
             'k': 10,
-            'score_threshold': 0.5,
         }
     ) -> ContextualCompressionRetriever:
         torch.cuda.empty_cache()
@@ -128,16 +126,19 @@ class VectorStore:
         )
 
         # Compressor
-        compressor = RankLLMRerank(top_n=3, model="rank_zephyr")
+        reranker = CohereRerank(
+            model="rerank-multilingual-v3.0",
+            cohere_api_key=envConfig.COHERE_API_KEY
+        )
         compression_retriever = ContextualCompressionRetriever(
-            base_compressor=compressor, base_retriever=retriever
+            base_compressor=reranker, base_retriever=retriever
         )
 
-        del compressor
+        del reranker
 
         return compression_retriever
 
-    def get_compression_multivector_retriever(self):
+    def get_compression_multivector_retriever(self) -> ContextualCompressionRetriever:
         retriever = MultiVectorRetriever(
             docstore=InMemoryStore(),
             vectorstore=self.vectorstore,
@@ -147,12 +148,16 @@ class VectorStore:
 
         retriever.docstore.mset(list(zip(self.ids, self.documents)))
 
-        compressor = RankLLMRerank(top_n=3, model="rank_zephyr")
-        compression_retriever = ContextualCompressionRetriever(
-            base_compressor=compressor, base_retriever=retriever
+        reranker = CohereRerank(
+            
+            model="rerank-multilingual-v3.0",
+            cohere_api_key=envConfig.COHERE_API_KEY
         )
-
-        del compressor
+        compression_retriever = ContextualCompressionRetriever(
+            base_compressor=reranker, base_retriever=retriever
+        )
+        
+        del reranker
 
         return compression_retriever
 

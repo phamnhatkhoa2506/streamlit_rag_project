@@ -4,6 +4,10 @@ from langchain.chains import RetrievalQA
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.runnables import RunnablePassthrough
 from rag.parser import OutputParser
+from rag.loader import DocumentLoader
+from rag.vector_store import VectorStore
+from config import envConfig
+
 
 class Chain():
     def __init__(
@@ -12,13 +16,14 @@ class Chain():
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",
             temperature=0.5,
+            api_key=envConfig.GOOGLE_API_KEY
         )
         self.prompt = hub.pull("rlm/rag-prompt")
         self.parser = OutputParser()
 
-    def get_chain(self, com_retriever: Any) -> Any:
+    def get_chain(self, com_retrievers: Any) -> Any:
         input_data = {
-            "context": com_retriever | self.format_docs,
+            "context": com_retrievers | self.format_docs,
             "question": RunnablePassthrough()
         }
 
@@ -62,7 +67,18 @@ def build_rag_chain():
     """
     Build and return a RAG chain. This is a stub; you should implement the actual retriever logic as needed.
     """
-   
-    com_retriever = None  
-    chain = Chain()
-    return chain.get_chain(com_retriever) 
+    
+    documents = DocumentLoader().load_documents("data/")
+
+    com_retrievers = VectorStore(
+        name="Computer_Vision", 
+        documents=documents,
+        storedb='chroma'
+    ).get_compression_retriever()
+    
+    chain = Chain().get_chain(com_retrievers) 
+
+    return chain   
+
+
+chain = build_rag_chain()

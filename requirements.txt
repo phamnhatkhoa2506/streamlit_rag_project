@@ -6,7 +6,10 @@ langchain_tavily
 langchain_redis
 langchain_huggingface
 langchain_google_genai
+langchain_cohere==0.4.4
 langchain_text_splitters
+langchain_chroma
+langchain_pinecone
 langgraph
 langgraph_checkpoint
 langgraph_checkpoint_redis
@@ -14,9 +17,13 @@ langgraph_checkpoint_redis
 # Deep Learning
 torch
 sentence_transformers
+cohere==5.15.0
 
 # Data processing
-unstructured
+unstructured[docx]
+unstructured[pdf]
+unstructured[pptx]
+lxml
 
 # UI
 streamlit
